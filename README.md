@@ -5,7 +5,7 @@ Mod Fabric client autonome pour Minecraft 1.21.1. Il indexe localement le dernie
 ## Fonctionnement
 
 - Une cinquième icône « coffre » est ajoutée en haut à droite du menu de ville/guilde Tropimon.
-- Le bouton utilise directement l'icône pièce Pokédollars de TropimodClient.
+- Le bouton utilise directement l'icône `relic_coin` de Cobblemon.
 - L'interface s'ouvre aussi avec la touche configurable `N` ou `/tropistock`. L'ancien raccourci `O` est migré une seule fois vers `N` pour éviter les conflits avec JEI et les autres mods.
 - La recherche couvre les noms, identifiants de mod, noms de coffre et coordonnées.
 - Les filtres séparent les objets directs des objets contenus dans les shulkers rangées dans un coffre.
@@ -33,7 +33,7 @@ L'indexeur assisté utilise les interactions Minecraft normales. La portée, la 
 Depuis la racine du dépôt :
 
 ```powershell
-.\gradlew.bat -p mods\tropimon-stocks-manager test build
+.\gradlew.bat test build
 ```
 
-Le JAR remappé est généré dans `mods/tropimon-stocks-manager/build/libs/`.
+Le JAR remappé est généré dans `build/libs/`.
