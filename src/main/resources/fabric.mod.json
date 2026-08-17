@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "tropimon_stocks_manager",
+  "version": "${version}",
+  "name": "TropimonStocksManager",
+  "description": "Index local des stocks des coffres de ville Tropimon, avec contenu des shulkers imbriquées.",
+  "authors": [
+    "Julien"
+  ],
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "fr.tropimon.stocksmanager.TropimonStocksManagerClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "1.21.1",
+    "fabric-api": "*",
+    "cobblemon": ">=1.7.2 <1.8.0",
+    "tropimodclient": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
