@@ -3,12 +3,8 @@ package fr.tropimon.stocksmanager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 
-import java.util.HashSet;
-import java.util.Set;
-
-/** Alerte une seule fois lors du passage sous un seuil, puis se réarme après réapprovisionnement. */
+/** Alerte uniquement lors d'un passage sous le seuil, état conservé entre les reconnexions. */
 final class StockWatchNotifier {
-    private static final Set<String> ALERTED = new HashSet<>();
     private static String lastServer = "";
     private static long nextPeriodicCheck;
 
@@ -27,22 +23,15 @@ final class StockWatchNotifier {
 
     static void check(MinecraftClient client, String server) {
         if (client.player == null) return;
-        for (TownChestIndex.WatchStatus status : TownChestIndex.get().watchStatuses(server)) {
-            String key = server + '|' + status.itemId();
-            if (status.belowThreshold()) {
-                if (ALERTED.add(key)) {
-                    client.player.sendMessage(Text.translatable(
-                            "message.tropimon_stocks_manager.watch_low",
-                            status.displayName(), status.current(), status.threshold()), false);
-                }
-            } else {
-                ALERTED.remove(key);
-            }
+        for (TownChestIndex.WatchStatus status : TownChestIndex.get()
+                .updateAlertTransitions(server, System.currentTimeMillis())) {
+            client.player.sendMessage(Text.translatable(
+                    "message.tropimon_stocks_manager.watch_low",
+                    status.displayName(), status.current(), status.threshold()), false);
         }
     }
 
     static void thresholdChanged(MinecraftClient client, String server, String itemId) {
-        ALERTED.remove(server + '|' + itemId);
         nextPeriodicCheck = System.currentTimeMillis() + 60_000L;
         check(client, server);
     }

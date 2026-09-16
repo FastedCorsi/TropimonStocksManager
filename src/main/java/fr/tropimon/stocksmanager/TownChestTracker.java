@@ -1,8 +1,6 @@
 package fr.tropimon.stocksmanager;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
-import net.minecraft.block.enums.ChestType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.item.ItemStack;
@@ -45,12 +43,13 @@ public final class TownChestTracker {
             activeSyncId = Integer.MIN_VALUE;
             return;
         }
+        ScreenHandler handler = handled.getScreenHandler();
+        if (activeSyncId == handler.syncId && tick < nextCaptureTick) return;
         if (lastChestTarget == null || tick - lastTargetTick > 40L
                 || !(client.world.getBlockState(lastChestTarget).getBlock() instanceof ChestBlock)
                 || !TropimonTownScope.isInPlayersTown(lastChestTarget)) {
             return;
         }
-        ScreenHandler handler = handled.getScreenHandler();
         if (activeSyncId != handler.syncId) {
             activeSyncId = handler.syncId;
             nextCaptureTick = tick + 2L;
@@ -61,12 +60,13 @@ public final class TownChestTracker {
         // Un snapshot complet par ouverture suffit et évite de réécrire le cache en boucle.
         nextCaptureTick = Long.MAX_VALUE;
 
-        BlockPos canonical = canonicalChestPos(client, lastChestTarget);
+        BlockPos canonical = ChestPositions.canonical(lastChestTarget, client.world.getBlockState(lastChestTarget));
         int containerSlots = container.getRows() * 9;
         List<ItemStack> stacks = new ArrayList<>(containerSlots);
         for (int index = 0; index < Math.min(containerSlots, handler.slots.size()); index++) {
             Slot slot = handler.slots.get(index);
-            stacks.add(slot.getStack().copy());
+            // updateChest immediately converts these into this mod's immutable records.
+            stacks.add(slot.getStack());
         }
         String server = serverKey(client);
         TownChestIndex.get().updateChest(server, client.world.getRegistryKey().getValue().toString(),
@@ -100,20 +100,6 @@ public final class TownChestTracker {
     private static boolean isEnderChest(HandledScreen<?> screen) {
         return screen.getTitle().getContent() instanceof TranslatableTextContent translated
                 && translated.getKey().equals("container.enderchest");
-    }
-
-    private static BlockPos canonicalChestPos(MinecraftClient client, BlockPos pos) {
-        BlockState state = client.world.getBlockState(pos);
-        if (!(state.getBlock() instanceof ChestBlock) || state.get(ChestBlock.CHEST_TYPE) == ChestType.SINGLE) {
-            return pos;
-        }
-        BlockPos other = pos.offset(ChestBlock.getFacing(state));
-        if (other.getX() < pos.getX()
-                || other.getX() == pos.getX() && other.getY() < pos.getY()
-                || other.getX() == pos.getX() && other.getY() == pos.getY() && other.getZ() < pos.getZ()) {
-            return other;
-        }
-        return pos;
     }
 
     private static void reset() {

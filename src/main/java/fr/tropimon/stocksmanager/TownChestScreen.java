@@ -2,7 +2,6 @@ package fr.tropimon.stocksmanager;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -18,10 +17,6 @@ import java.util.Map;
 /** Tableau de stocks basé sur l'interface du PC Cobblemon utilisée par Team Saver. */
 public final class TownChestScreen extends Screen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
-    private static final Identifier COIN_ICON = Identifier.of("cobblemon", "textures/item/relic_coin.png");
-    private static final Identifier WATCH_ICON = Identifier.of("tropimodclient", "guis/commons/icons/star_icon.png");
-    private static final Identifier REFRESH_ICON = Identifier.of("tropimodclient", "guis/pokeradar/pokeradar_reload_button.png");
-    private static final Identifier CLOSE_ICON = Identifier.of("tropimodclient", "guis/pokeradar/pokeradar_stoptracking_button.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
     private static final int PANEL_W = 349;
@@ -39,6 +34,9 @@ public final class TownChestScreen extends Screen {
     private final List<ClickArea> clickAreas = new ArrayList<>();
     private TownChestIndex.Scope scope = TownChestIndex.Scope.ALL;
     private TownChestIndex.Namespace namespace = TownChestIndex.Namespace.ALL;
+    private TownChestIndex.SortOrder sort = TownChestIndex.SortOrder.QUANTITY;
+    private boolean lowOnly;
+    private boolean staleOnly;
     private List<TownChestIndex.ItemAggregate> results = List.of();
     private TextFieldWidget search;
     private int page;
@@ -48,7 +46,7 @@ public final class TownChestScreen extends Screen {
     private TownChestIndex.ItemAggregate hoveredItem;
     private String hoveredAction = "";
     private String query = "";
-    private int watchAlerts;
+    private StockPcButton indexButton;
 
     public TownChestScreen(Screen parent) {
         super(Text.translatable("screen.tropimon_stocks_manager.title"));
@@ -59,15 +57,16 @@ public final class TownChestScreen extends Screen {
     protected void init() {
         left = (width - PANEL_W) / 2;
         top = (height - PANEL_H) / 2;
-        addScopeButton(left + 8, 48, TownChestIndex.Scope.ALL, "filter.all");
-        addScopeButton(left + 58, 56, TownChestIndex.Scope.DIRECT, "filter.direct_short");
-        addScopeButton(left + 116, 64, TownChestIndex.Scope.SHULKER, "filter.shulker_short");
-        StockPcButton mods = new StockPcButton(left + 182, top + 28, 52, 16,
-                Text.literal(namespaceLabel()), button -> cycleNamespace(), false);
-        mods.setTooltip(Tooltip.of(Text.translatable("screen.tropimon_stocks_manager.namespace_hint")));
-        addDrawableChild(mods);
+        indexButton = addDrawableChild(new StockPcButton(left + 6, top + 5, 60, 16,
+                indexButtonText(), button -> toggleIndexing(), TownChestAutoIndexer.isActive()));
 
-        search = new TextFieldWidget(textRenderer, left + 236, top + 28, 105, 16,
+        addScopeButton(left + 8, 42, TownChestIndex.Scope.ALL, "filter.all");
+        addScopeButton(left + 52, 58, TownChestIndex.Scope.DIRECT, "filter.direct_short");
+        addScopeButton(left + 112, 64, TownChestIndex.Scope.SHULKER, "filter.shulker_short");
+        addDrawableChild(new StockPcButton(left + 178, top + 28, 68, 16,
+                namespaceButtonText(), button -> cycleNamespace(), false));
+
+        search = new TextFieldWidget(textRenderer, left + 248, top + 28, 93, 16,
                 Text.translatable("screen.tropimon_stocks_manager.search"));
         search.setPlaceholder(Text.translatable("screen.tropimon_stocks_manager.search_short"));
         search.setMaxLength(80);
@@ -87,11 +86,10 @@ public final class TownChestScreen extends Screen {
         addDrawableChild(button);
     }
 
-    private void refresh() {
+    void refresh() {
         if (client == null) return;
-        results = index.search(TownChestTracker.serverKey(client), query, scope, namespace);
-        watchAlerts = (int) index.watchStatuses(TownChestTracker.serverKey(client)).stream()
-                .filter(TownChestIndex.WatchStatus::belowThreshold).count();
+        results = index.search(TownChestTracker.serverKey(client), query, scope, namespace,
+                sort, lowOnly, staleOnly);
         page = Math.max(0, Math.min(page, pages() - 1));
         selectedIndex = Math.min(selectedIndex, results.size() - 1);
     }
@@ -115,46 +113,11 @@ public final class TownChestScreen extends Screen {
 
     private void drawTitleBar(DrawContext context, int mouseX, int mouseY) {
         context.drawCenteredTextWithShadow(textRenderer, title, left + PANEL_W / 2, top + 13, 0xFFFFFFFF);
-        boolean coinHover = inside(mouseX, mouseY, left + 8, top + 7, 10, 10);
-        if (coinHover) hoveredAction = Text.translatable(TownChestAutoIndexer.isActive()
-                ? "screen.tropimon_stocks_manager.index_stop"
-                : "screen.tropimon_stocks_manager.index_nearby").getString();
-        context.drawTexture(COIN_ICON, left + 9, top + 6, 12, 12,
-                0, 0, 16, 16, 16, 16);
-        clickAreas.add(new ClickArea(left + 8, top + 7, 12, 12, () -> TownChestAutoIndexer.toggle(client)));
-
-        if (TownChestAutoIndexer.isActive()) {
-            boolean stopHover = inside(mouseX, mouseY, left + 21, top + 5, 15, 15);
-            if (stopHover) hoveredAction = Text.translatable("screen.tropimon_stocks_manager.index_stop").getString();
-            StockUi.iconSlot(context, left + 21, top + 5, 15, 15, stopHover);
-            context.drawTexture(CLOSE_ICON, left + 23, top + 7, 11, 11,
-                    0, 0, 16, 16, 16, 16);
-            clickAreas.add(new ClickArea(left + 21, top + 5, 15, 15,
-                    () -> TownChestAutoIndexer.toggle(client)));
-        }
-
-        boolean watchHover = inside(mouseX, mouseY, left + 297, top + 5, 16, 15);
-        if (watchHover) hoveredAction = Text.translatable("screen.tropimon_stocks_manager.watchlist").getString();
-        StockUi.iconSlot(context, left + 297, top + 5, 16, 15, watchHover);
-        context.drawTexture(WATCH_ICON, left + 300, top + 7, 10, 10,
-                0, 0, 14, 14, 14, 14);
-        if (watchAlerts > 0) context.drawTextWithShadow(textRenderer, "!", left + 307, top + 5, 0xFFFF6565);
-        clickAreas.add(new ClickArea(left + 297, top + 5, 16, 15,
-                () -> client.setScreen(new WatchlistScreen(this))));
-
-        boolean refreshHover = inside(mouseX, mouseY, left + 314, top + 5, 16, 15);
-        if (refreshHover) hoveredAction = Text.translatable("screen.tropimon_stocks_manager.update").getString();
-        StockUi.iconSlot(context, left + 314, top + 5, 16, 15, refreshHover);
-        context.drawTexture(REFRESH_ICON, left + 316, top + 7, 12, 12,
-                0, 0, 16, 16, 16, 16);
-        clickAreas.add(new ClickArea(left + 314, top + 5, 16, 15, this::refresh));
-
-        boolean closeHover = inside(mouseX, mouseY, left + 331, top + 5, 16, 15);
+        boolean closeHover = inside(mouseX, mouseY, left + 331, top + 5, 16, 16);
         if (closeHover) hoveredAction = Text.translatable("screen.tropimon_stocks_manager.close").getString();
-        StockUi.iconSlot(context, left + 331, top + 5, 16, 15, closeHover);
-        context.drawTexture(CLOSE_ICON, left + 333, top + 7, 12, 12,
-                0, 0, 16, 16, 16, 16);
-        clickAreas.add(new ClickArea(left + 331, top + 5, 16, 15, this::close));
+        StockUi.iconButton(context, left + 331, top + 5, 16, 16, closeHover, false);
+        StockUi.icon(context, StockUi.Icon.CLOSE, left + 333, top + 7, closeHover);
+        clickAreas.add(new ClickArea(left + 331, top + 5, 16, 16, this::close));
     }
 
     private void drawTableBackground(DrawContext context) {
@@ -262,6 +225,22 @@ public final class TownChestScreen extends Screen {
         clearAndInit();
     }
 
+    TownChestIndex.Scope scope() { return scope; }
+    TownChestIndex.Namespace namespace() { return namespace; }
+    TownChestIndex.SortOrder sort() { return sort; }
+    boolean lowOnly() { return lowOnly; }
+    boolean staleOnly() { return staleOnly; }
+    String query() { return query; }
+
+    void applyView(TownChestIndex.SavedView view) {
+        scope = view.scope(); namespace = view.namespace(); sort = view.sort();
+        lowOnly = view.lowOnly(); staleOnly = view.staleOnly(); query = view.query(); page = 0;
+    }
+
+    void applyFilters(TownChestIndex.SortOrder sort, boolean lowOnly, boolean staleOnly) {
+        this.sort = sort; this.lowOnly = lowOnly; this.staleOnly = staleOnly; page = 0;
+    }
+
     private void cycleNamespace() {
         TownChestIndex.Namespace[] values = TownChestIndex.Namespace.values();
         namespace = values[(namespace.ordinal() + 1) % values.length];
@@ -272,6 +251,22 @@ public final class TownChestScreen extends Screen {
     private String namespaceLabel() {
         return Text.translatable("screen.tropimon_stocks_manager.namespace_short."
                 + namespace.name().toLowerCase(Locale.ROOT)).getString();
+    }
+
+    private Text namespaceButtonText() {
+        return Text.translatable("screen.tropimon_stocks_manager.namespace_button", namespaceLabel());
+    }
+
+    private Text indexButtonText() {
+        return Text.translatable(TownChestAutoIndexer.isActive()
+                ? "screen.tropimon_stocks_manager.index_stop_short"
+                : "screen.tropimon_stocks_manager.index_start_short");
+    }
+
+    private void toggleIndexing() {
+        TownChestAutoIndexer.toggle(client);
+        indexButton.setMessage(indexButtonText());
+        indexButton.setSelected(TownChestAutoIndexer.isActive());
     }
 
     private int pages() { return Math.max(1, (results.size() + PAGE_SIZE - 1) / PAGE_SIZE); }

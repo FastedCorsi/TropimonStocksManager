@@ -1,0 +1,23 @@
+# Keep personal/generated files out of source exports as well as binaries.
+.gitignore export-ignore
+.gradle export-ignore
+build export-ignore
+out export-ignore
+run export-ignore
+.idea export-ignore
+promo export-ignore
+config export-ignore
+logs export-ignore
+screenshots export-ignore
+saves export-ignore
+backups export-ignore
+mod-archive export-ignore
+.env* export-ignore
+*.log export-ignore
+*.bak export-ignore
+*.backup export-ignore
+*.private export-ignore
+town-chests.json export-ignore
+options.txt export-ignore
+launcher_accounts.json export-ignore
+launcher_profiles.json export-ignore

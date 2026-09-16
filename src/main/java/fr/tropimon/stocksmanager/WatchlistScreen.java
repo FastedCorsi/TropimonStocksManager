@@ -13,9 +13,9 @@ import java.util.List;
 /** Liste persistante des seuils, y compris pour les objets actuellement à zéro. */
 final class WatchlistScreen extends Screen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
-    private static final Identifier CLOSE_ICON = Identifier.of("tropimodclient", "guis/pokeradar/pokeradar_stoptracking_button.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
+    private static final long SNOOZE_MILLIS = 24L * 60L * 60L * 1000L;
     private static final int PANEL_W = 349;
     private static final int PANEL_H = 205;
     private static final int PAGE_SIZE = 5;
@@ -41,7 +41,7 @@ final class WatchlistScreen extends Screen {
 
     private void refresh() {
         if (client == null) return;
-        entries = index.watchStatuses(TownChestTracker.serverKey(client));
+        entries = index.watchStatuses(TownChestTracker.serverKey(client), System.currentTimeMillis());
         page = Math.max(0, Math.min(page, pages() - 1));
     }
 
@@ -53,16 +53,19 @@ final class WatchlistScreen extends Screen {
                 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
         context.fill(left + 5, top + 24, left + 344, top + 189, 0xFFE7EDF3);
         context.fill(left + 5, top + 46, left + 344, top + 59, 0xFFD1DAE3);
+        context.drawText(textRenderer, Text.translatable("screen.tropimon_stocks_manager.alerts.hint"),
+                left + 13, top + 32, 0xFF52636D, false);
         context.drawCenteredTextWithShadow(textRenderer, title, left + PANEL_W / 2, top + 13, 0xFFFFFFFF);
-        StockUi.iconSlot(context, left + 331, top + 5, 16, 15, false);
-        context.drawTexture(CLOSE_ICON, left + 333, top + 7, 12, 12,
-                0, 0, 16, 16, 16, 16);
-        clickAreas.add(new ClickArea(left + 331, top + 5, 16, 15, this::close));
+        boolean closeHover = mouseX >= left + 331 && mouseX < left + 347
+                && mouseY >= top + 5 && mouseY < top + 21;
+        StockUi.iconButton(context, left + 331, top + 5, 16, 16, closeHover, false);
+        StockUi.icon(context, StockUi.Icon.CLOSE, left + 333, top + 7, closeHover);
+        clickAreas.add(new ClickArea(left + 331, top + 5, 16, 16, this::close));
         context.drawText(textRenderer, Text.translatable("screen.tropimon_stocks_manager.column.item"),
                 left + 39, top + 48, 0xFF17242B, false);
         centered(context, Text.translatable("screen.tropimon_stocks_manager.column.stock"), left + 235, top + 48, 0xFF17242B);
         centered(context, Text.translatable("screen.tropimon_stocks_manager.column.minimum"), left + 280, top + 48, 0xFF52636D);
-        centered(context, Text.translatable("screen.tropimon_stocks_manager.column.state"), left + 324, top + 48, 0xFF52636D);
+        centered(context, Text.translatable("screen.tropimon_stocks_manager.column.state"), left + 315, top + 48, 0xFF52636D);
         drawRows(context, mouseX, mouseY);
         drawFooter(context);
         super.render(context, mouseX, mouseY, delta);
@@ -77,23 +80,38 @@ final class WatchlistScreen extends Screen {
             context.fill(left + 7, y + 22, left + 342, y + 23, 0xFFCCD6DE);
             if (entryIndex >= entries.size()) continue;
             TownChestIndex.WatchStatus entry = entries.get(entryIndex);
+            long now = System.currentTimeMillis();
+            boolean snoozed = entry.snoozed(now);
             ItemStack icon = index.icon(entry.itemId());
             context.drawItem(icon, left + 14, y + 3);
             context.drawText(textRenderer, textRenderer.trimToWidth(entry.displayName(), 175),
                     left + 39, y + 3, 0xFF17242B, false);
             context.drawText(textRenderer, textRenderer.trimToWidth(entry.itemId(), 175),
                     left + 39, y + 13, 0xFF52636D, false);
-            int stateColor = entry.belowThreshold() ? 0xFFD13E4D : 0xFF36A85D;
+            int stateColor = snoozed ? 0xFFE39524 : entry.belowThreshold() ? 0xFFD13E4D : 0xFF36A85D;
             centered(context, Text.literal(Integer.toString(entry.current())), left + 235, y + 8, stateColor);
             centered(context, Text.literal(Integer.toString(entry.threshold())), left + 280, y + 8, 0xFF52636D);
-            centered(context, Text.translatable(entry.belowThreshold()
-                    ? "screen.tropimon_stocks_manager.state.low"
-                    : "screen.tropimon_stocks_manager.state.ok"), left + 324, y + 8, stateColor);
+            centered(context, Text.translatable(snoozed
+                    ? "screen.tropimon_stocks_manager.state.snoozed"
+                    : entry.belowThreshold() ? "screen.tropimon_stocks_manager.state.low"
+                    : "screen.tropimon_stocks_manager.state.ok"), left + 309, y + 8, stateColor);
             if (mouseX >= left + 7 && mouseX < left + 342 && mouseY >= y && mouseY < y + 23) {
                 context.fill(left + 7, y, left + 10, y + 23, stateColor);
             }
-            clickAreas.add(new ClickArea(left + 7, y, 335, 23,
+            clickAreas.add(new ClickArea(left + 7, y, 304, 23,
                     () -> client.setScreen(new ItemDetailScreen(this, entry.itemId()))));
+            if (entry.belowThreshold()) {
+                boolean snoozeHover = mouseX >= left + 319 && mouseX < left + 340
+                        && mouseY >= y + 2 && mouseY < y + 21;
+                StockUi.iconButton(context, left + 319, y + 2, 21, 19, snoozeHover, snoozed);
+                StockUi.icon(context, StockUi.Icon.CLOCK, left + 324, y + 5,
+                        snoozeHover || snoozed);
+                clickAreas.add(new ClickArea(left + 319, y + 2, 21, 19, () -> {
+                    index.snoozeAlert(TownChestTracker.serverKey(client), entry.itemId(),
+                            snoozed ? 0L : System.currentTimeMillis() + SNOOZE_MILLIS);
+                    refresh();
+                }));
+            }
         }
     }
 

@@ -25,7 +25,7 @@ final class StockIndexHud {
                 : Text.translatable("hud.tropimon_stocks_manager.current",
                         current.getX(), current.getY(), current.getZ()).getString();
         String indexedLine = Text.translatable("hud.tropimon_stocks_manager.detected_indexed",
-                status.detected(), status.indexed()).getString();
+                status.detected(), status.indexed(), status.old()).getString();
         String remainingLine = Text.translatable("hud.tropimon_stocks_manager.blocked_remaining",
                 status.inaccessible(), status.remaining()).getString();
         int width = Math.max(Math.max(client.textRenderer.getWidth(title), client.textRenderer.getWidth(currentLine)),

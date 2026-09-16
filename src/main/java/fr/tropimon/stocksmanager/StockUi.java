@@ -7,6 +7,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 final class StockUi {
+    enum Icon { CLOCK, CLOSE }
+
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM HH:mm")
             .withZone(ZoneId.systemDefault());
 
@@ -48,12 +50,46 @@ final class StockUi {
         return formatted.toString();
     }
 
-    static void iconSlot(DrawContext context, int x, int y, int width, int height, boolean hovered) {
-        context.fill(x, y, x + width, y + height, hovered ? 0x885EC8D4 : 0x554A5962);
-        int border = hovered ? 0xFF9CE8F2 : 0xFF718089;
-        context.fill(x, y, x + width, y + 1, border);
-        context.fill(x, y + height - 1, x + width, y + height, border);
-        context.fill(x, y, x + 1, y + height, border);
-        context.fill(x + width - 1, y, x + width, y + height, border);
+    static void iconButton(DrawContext context, int x, int y, int width, int height,
+                           boolean hovered, boolean selected) {
+        StockPcButton.drawBackground(context, x, y, width, height, hovered, selected);
+    }
+
+    /** Pictogrammes 12 px homogènes, dessinés sur la palette du PC Cobblemon. */
+    static void icon(DrawContext context, Icon icon, int x, int y, boolean highlighted) {
+        drawIcon(context, icon, x + 1, y + 1, 0xB018252B);
+        drawIcon(context, icon, x, y, highlighted ? 0xFF62E5F0 : 0xFFE7EEF1);
+    }
+
+    private static void drawIcon(DrawContext context, Icon icon, int x, int y, int color) {
+        switch (icon) {
+            case CLOCK -> {
+                rect(context, x + 3, y + 1, 6, 1, color);
+                rect(context, x + 2, y + 2, 1, 1, color);
+                rect(context, x + 9, y + 2, 1, 1, color);
+                rect(context, x + 1, y + 3, 1, 6, color);
+                rect(context, x + 10, y + 3, 1, 6, color);
+                rect(context, x + 2, y + 9, 1, 1, color);
+                rect(context, x + 9, y + 9, 1, 1, color);
+                rect(context, x + 3, y + 10, 6, 1, color);
+                rect(context, x + 5, y + 3, 2, 4, color);
+                rect(context, x + 6, y + 6, 3, 2, color);
+            }
+            case CLOSE -> {
+                rect(context, x + 2, y + 2, 2, 2, color);
+                rect(context, x + 8, y + 2, 2, 2, color);
+                rect(context, x + 3, y + 3, 2, 2, color);
+                rect(context, x + 7, y + 3, 2, 2, color);
+                rect(context, x + 4, y + 4, 4, 4, color);
+                rect(context, x + 3, y + 7, 2, 2, color);
+                rect(context, x + 7, y + 7, 2, 2, color);
+                rect(context, x + 2, y + 8, 2, 2, color);
+                rect(context, x + 8, y + 8, 2, 2, color);
+            }
+        }
+    }
+
+    private static void rect(DrawContext context, int x, int y, int width, int height, int color) {
+        context.fill(x, y, x + width, y + height, color);
     }
 }

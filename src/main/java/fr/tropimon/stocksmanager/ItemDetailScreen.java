@@ -14,7 +14,6 @@ import java.util.List;
 /** Fiche complète d'un objet avec répartition par coffre et seuil d'alerte. */
 final class ItemDetailScreen extends Screen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
-    private static final Identifier CLOSE_ICON = Identifier.of("tropimodclient", "guis/pokeradar/pokeradar_stoptracking_button.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
     private static final int PANEL_W = 349;
@@ -46,15 +45,18 @@ final class ItemDetailScreen extends Screen {
         left = (width - PANEL_W) / 2;
         top = (height - PANEL_H) / 2;
         refresh();
-        thresholdField = new TextFieldWidget(textRenderer, left + 188, top + 28, 54, 16,
+        addDrawableChild(new StockPcButton(left + 8, top + 28, 78, 16,
+                Text.translatable("screen.tropimon_stocks_manager.history"),
+                button -> client.setScreen(new ItemHistoryScreen(this, itemId)), false));
+        thresholdField = new TextFieldWidget(textRenderer, left + 172, top + 28, 50, 16,
                 Text.translatable("screen.tropimon_stocks_manager.watch_threshold_label"));
         thresholdField.setMaxLength(9);
         thresholdField.setTextPredicate(value -> value.isEmpty() || value.chars().allMatch(Character::isDigit));
         thresholdField.setText(item.watchThreshold() <= 0 ? "" : Integer.toString(item.watchThreshold()));
         addDrawableChild(thresholdField);
-        addDrawableChild(new StockPcButton(left + 244, top + 28, 55, 16,
+        addDrawableChild(new StockPcButton(left + 224, top + 28, 54, 16,
                 Text.translatable("screen.tropimon_stocks_manager.save"), button -> saveThreshold(), false));
-        addDrawableChild(new StockPcButton(left + 301, top + 28, 40, 16,
+        addDrawableChild(new StockPcButton(left + 280, top + 28, 61, 16,
                 Text.translatable("screen.tropimon_stocks_manager.remove"), button -> clearThreshold(), false));
     }
 
@@ -90,7 +92,7 @@ final class ItemDetailScreen extends Screen {
                 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
         drawBackground(context);
         super.render(context, mouseX, mouseY, delta);
-        drawTitle(context);
+        drawTitle(context, mouseX, mouseY);
         drawHeaders(context);
         drawRows(context, mouseX, mouseY);
         drawFooter(context);
@@ -102,20 +104,19 @@ final class ItemDetailScreen extends Screen {
         context.fill(left + 5, top + 24, left + 344, top + 26, 0xFF8B969E);
     }
 
-    private void drawTitle(DrawContext context) {
+    private void drawTitle(DrawContext context, int mouseX, int mouseY) {
         ItemStack icon = index.icon(itemId);
         context.drawItem(icon, left + 10, top + 5);
-        String titleValue = item.displayName() + " • " + item.total();
-        if (item.hasDailyComparison()) titleValue += " (" + StockUi.delta(item.dailyDelta()) + ")";
+        String titleValue = item.displayName();
         context.drawCenteredTextWithShadow(textRenderer, textRenderer.trimToWidth(titleValue, 255),
                 left + PANEL_W / 2, top + 13, 0xFFFFFFFF);
         context.drawText(textRenderer, Text.translatable("screen.tropimon_stocks_manager.watch_min"),
-                left + 112, top + 32, COLOR_MUTED, false);
-        StockUi.iconSlot(context, left + 331, top + 5, 16, 15,
-                false);
-        context.drawTexture(CLOSE_ICON, left + 333, top + 7, 12, 12,
-                0, 0, 16, 16, 16, 16);
-        clickAreas.add(new ClickArea(left + 331, top + 5, 16, 15, this::close));
+                left + 91, top + 32, COLOR_MUTED, false);
+        boolean closeHover = mouseX >= left + 331 && mouseX < left + 347
+                && mouseY >= top + 5 && mouseY < top + 21;
+        StockUi.iconButton(context, left + 331, top + 5, 16, 16, closeHover, false);
+        StockUi.icon(context, StockUi.Icon.CLOSE, left + 333, top + 7, closeHover);
+        clickAreas.add(new ClickArea(left + 331, top + 5, 16, 16, this::close));
     }
 
     private void drawHeaders(DrawContext context) {

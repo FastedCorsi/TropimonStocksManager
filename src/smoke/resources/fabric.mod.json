@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "tropimon_stocks_manager_smoke",
+  "version": "1.0.0",
+  "name": "Stocks Manager isolated smoke test",
+  "authors": ["By FastedCorsi"],
+  "environment": "client",
+  "entrypoints": {"client": ["fr.tropimon.stocksmanager.StockSmokeClient"]},
+  "depends": {"tropimon_stocks_manager": "*", "fabric-api": "*"}
+}

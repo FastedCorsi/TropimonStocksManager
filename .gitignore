@@ -5,3 +5,20 @@ run/
 .idea/
 *.iml
 *.log
+
+# Local data: keep originals on disk, never publish them.
+promo/
+config/
+logs/
+screenshots/
+saves/
+backups/
+mod-archive/
+.env*
+*.bak
+*.backup
+*.private
+town-chests.json
+options.txt
+launcher_accounts.json
+launcher_profiles.json

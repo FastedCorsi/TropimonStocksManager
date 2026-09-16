@@ -4,6 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -20,6 +21,7 @@ public final class TropimonStocksManagerClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        TropimonSelfUpdater.start(LOGGER);
         openStockKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.tropimon_stocks_manager.open",
                 InputUtil.Type.KEYSYM,
@@ -61,6 +63,7 @@ public final class TropimonStocksManagerClient implements ClientModInitializer {
             }
         });
         TownMenuIntegration.register();
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> TownChestIndex.get().close());
         StockIndexHud.register();
         MinecraftClient.getInstance().execute(() -> StockKeyBindingMigration.run(
                 MinecraftClient.getInstance(), openStockKey));
@@ -78,3 +81,4 @@ public final class TropimonStocksManagerClient implements ClientModInitializer {
         }
     }
 }
+
