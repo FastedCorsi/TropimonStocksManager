@@ -28,15 +28,28 @@ final class StockIndexHud {
                 status.detected(), status.indexed(), status.old()).getString();
         String remainingLine = Text.translatable("hud.tropimon_stocks_manager.blocked_remaining",
                 status.inaccessible(), status.remaining()).getString();
-        int width = Math.max(Math.max(client.textRenderer.getWidth(title), client.textRenderer.getWidth(currentLine)),
-                Math.max(client.textRenderer.getWidth(indexedLine), client.textRenderer.getWidth(remainingLine))) + 12;
+        String[] values = {title, currentLine, indexedLine, remainingLine};
+        int[] colors = {0xFF70E49A, 0xFFFFFFFF, 0xFFB9DDE5, 0xFFB9DDE5};
+        int width = Math.min(client.getWindow().getScaledWidth() - 12,
+                Math.max(Math.max(client.textRenderer.getWidth(title), client.textRenderer.getWidth(currentLine)),
+                Math.max(client.textRenderer.getWidth(indexedLine), client.textRenderer.getWidth(remainingLine))) + 16);
+        var lines = new java.util.ArrayList<java.util.List<net.minecraft.text.OrderedText>>();
+        int lineCount = 0;
+        for (String value : values) {
+            var wrapped = client.textRenderer.wrapLines(Text.literal(value), width - 14);
+            lines.add(wrapped);
+            lineCount += wrapped.size();
+        }
         int x = (client.getWindow().getScaledWidth() - width) / 2;
         int y = 5;
-        context.fill(x, y, x + width, y + 45, 0xC8182730);
-        context.fill(x, y, x + 3, y + 45, 0xFF44D17A);
-        context.drawTextWithShadow(client.textRenderer, title, x + 7, y + 4, 0xFF70E49A);
-        context.drawTextWithShadow(client.textRenderer, currentLine, x + 7, y + 14, 0xFFFFFFFF);
-        context.drawTextWithShadow(client.textRenderer, indexedLine, x + 7, y + 24, 0xFFB9DDE5);
-        context.drawTextWithShadow(client.textRenderer, remainingLine, x + 7, y + 34, 0xFFB9DDE5);
+        context.fill(x, y, x + width, y + lineCount * 10 + 5, 0xC8182730);
+        context.fill(x, y, x + 3, y + lineCount * 10 + 5, 0xFF44D17A);
+        y += 4;
+        for (int group = 0; group < lines.size(); group++) {
+            for (var line : lines.get(group)) {
+                context.drawTextWithShadow(client.textRenderer, line, x + 7, y, colors[group]);
+                y += 10;
+            }
+        }
     }
 }

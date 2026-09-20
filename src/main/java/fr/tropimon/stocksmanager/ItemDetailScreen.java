@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Fiche complète d'un objet avec répartition par coffre et seuil d'alerte. */
-final class ItemDetailScreen extends Screen {
+final class ItemDetailScreen extends FittedScreen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
@@ -35,13 +35,13 @@ final class ItemDetailScreen extends Screen {
     private int page;
 
     ItemDetailScreen(Screen parent, String itemId) {
-        super(Text.translatable("screen.tropimon_stocks_manager.detail"));
+        super(Text.translatable("screen.tropimon_stocks_manager.detail"), 357, 213);
         this.parent = parent;
         this.itemId = itemId;
     }
 
     @Override
-    protected void init() {
+    protected void initContent() {
         left = (width - PANEL_W) / 2;
         top = (height - PANEL_H) / 2;
         refresh();
@@ -85,13 +85,12 @@ final class ItemDetailScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+    public void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
         clickAreas.clear();
         context.drawTexture(PC_BASE, left, top, PANEL_W, PANEL_H,
                 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
         drawBackground(context);
-        super.render(context, mouseX, mouseY, delta);
+        renderWidgets(context, mouseX, mouseY, delta);
         drawTitle(context, mouseX, mouseY);
         drawHeaders(context);
         drawRows(context, mouseX, mouseY);
@@ -152,7 +151,7 @@ final class ItemDetailScreen extends Screen {
             centered(context, Text.literal(StockUi.date(source.checkedAt())), left + 310, y + 8, freshness);
             if (mouseX >= left + 7 && mouseX < left + 342 && mouseY >= y && mouseY < y + ROW_H) {
                 context.fill(left + 7, y, left + 10, y + ROW_H, 0xFF3BA4BC);
-                context.drawTooltip(textRenderer, List.of(
+                queueTooltip(textRenderer, List.of(
                         Text.literal(source.title()),
                         Text.literal(coords),
                         Text.translatable("screen.tropimon_stocks_manager.direct_short", source.directCount()),
@@ -182,7 +181,7 @@ final class ItemDetailScreen extends Screen {
     private int pages() { return Math.max(1, (sources.size() + PAGE_SIZE - 1) / PAGE_SIZE); }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean clickContent(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             for (int i = clickAreas.size() - 1; i >= 0; i--) {
                 ClickArea area = clickAreas.get(i);
@@ -192,11 +191,11 @@ final class ItemDetailScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.clickContent(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean scrollContent(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         page = Math.max(0, Math.min(pages() - 1, page - (int) Math.signum(verticalAmount)));
         return true;
     }

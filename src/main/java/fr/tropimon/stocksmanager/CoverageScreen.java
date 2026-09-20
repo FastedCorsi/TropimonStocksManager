@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Locale;
 
 /** Détail de la dernière couverture observée pendant l'indexation en marche. */
-final class CoverageScreen extends Screen {
+final class CoverageScreen extends FittedScreen {
     private static final Identifier PC = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier CLOCK = Identifier.of("tropimodclient", "guis/commons/icons/clock_icon.png");
     private static final Identifier CROSS = Identifier.of("tropimodclient", "guis/commons/icons/validation_cross_icon.png");
@@ -24,14 +24,13 @@ final class CoverageScreen extends Screen {
     private int left, top, page;
 
     CoverageScreen(Screen parent) {
-        super(Text.translatable("screen.tropimon_stocks_manager.coverage"));
+        super(Text.translatable("screen.tropimon_stocks_manager.coverage"), 357, 213);
         this.parent = parent;
     }
 
-    @Override protected void init() { left = (width - W) / 2; top = (height - H) / 2; }
+    @Override protected void initContent() { left = (width - W) / 2; top = (height - H) / 2; }
 
-    @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+    @Override public void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
         clicks.clear();
         TownChestAutoIndexer.Status status = TownChestAutoIndexer.status();
         List<TownChestAutoIndexer.CoverageEntry> entries = status.entries();
@@ -51,7 +50,7 @@ final class CoverageScreen extends Screen {
                 left + 185, top + 48, 0xFF17242B, false);
         drawRows(context, entries);
         drawFooter(context, entries);
-        super.render(context, mouseX, mouseY, delta);
+        renderWidgets(context, mouseX, mouseY, delta);
     }
 
     private void drawClose(DrawContext context, int mx, int my) {
@@ -107,14 +106,14 @@ final class CoverageScreen extends Screen {
     private static boolean inside(double mx, double my, int x, int y, int w, int h) {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
-    @Override public boolean mouseClicked(double x, double y, int button) {
+    @Override public boolean clickContent(double x, double y, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) for (int i = clicks.size() - 1; i >= 0; i--) {
             ClickArea area = clicks.get(i);
             if (inside(x, y, area.x, area.y, area.w, area.h)) { area.action.run(); return true; }
         }
-        return super.mouseClicked(x, y, button);
+        return super.clickContent(x, y, button);
     }
-    @Override public boolean mouseScrolled(double x, double y, double h, double vertical) {
+    @Override public boolean scrollContent(double x, double y, double h, double vertical) {
         page = Math.max(0, Math.min(pages(TownChestAutoIndexer.status().entries()) - 1,
                 page - (int) Math.signum(vertical))); return true;
     }

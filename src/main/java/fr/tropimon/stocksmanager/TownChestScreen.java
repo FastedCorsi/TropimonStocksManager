@@ -15,7 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /** Tableau de stocks basé sur l'interface du PC Cobblemon utilisée par Team Saver. */
-public final class TownChestScreen extends Screen {
+public final class TownChestScreen extends FittedScreen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
@@ -49,12 +49,12 @@ public final class TownChestScreen extends Screen {
     private StockPcButton indexButton;
 
     public TownChestScreen(Screen parent) {
-        super(Text.translatable("screen.tropimon_stocks_manager.title"));
+        super(Text.translatable("screen.tropimon_stocks_manager.title"), 357, 213);
         this.parent = parent;
     }
 
     @Override
-    protected void init() {
+    protected void initContent() {
         left = (width - PANEL_W) / 2;
         top = (height - PANEL_H) / 2;
         indexButton = addDrawableChild(new StockPcButton(left + 6, top + 5, 60, 16,
@@ -95,8 +95,7 @@ public final class TownChestScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+    public void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
         clickAreas.clear();
         hoveredItem = null;
         hoveredAction = "";
@@ -104,7 +103,7 @@ public final class TownChestScreen extends Screen {
                 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
         drawTitleBar(context, mouseX, mouseY);
         drawTableBackground(context);
-        super.render(context, mouseX, mouseY, delta);
+        renderWidgets(context, mouseX, mouseY, delta);
         drawHeaders(context);
         drawRows(context, mouseX, mouseY);
         drawFooter(context, mouseX, mouseY);
@@ -192,7 +191,7 @@ public final class TownChestScreen extends Screen {
 
     private void drawTooltip(DrawContext context, int mouseX, int mouseY) {
         if (!hoveredAction.isBlank()) {
-            context.drawTooltip(textRenderer, Text.literal(hoveredAction), mouseX, mouseY);
+            queueTooltip(textRenderer, Text.literal(hoveredAction), mouseX, mouseY);
             return;
         }
         if (hoveredItem == null) return;
@@ -216,7 +215,7 @@ public final class TownChestScreen extends Screen {
                 .sorted(Map.Entry.<String, Integer>comparingByValue(Comparator.reverseOrder()))
                 .limit(6)
                 .forEach(source -> lines.add(Text.literal(source.getKey() + " ×" + source.getValue())));
-        context.drawTooltip(textRenderer, lines, mouseX, mouseY);
+        queueTooltip(textRenderer, lines, mouseX, mouseY);
     }
 
     private void setScope(TownChestIndex.Scope value) {
@@ -272,7 +271,7 @@ public final class TownChestScreen extends Screen {
     private int pages() { return Math.max(1, (results.size() + PAGE_SIZE - 1) / PAGE_SIZE); }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean clickContent(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             for (int i = clickAreas.size() - 1; i >= 0; i--) {
                 ClickArea area = clickAreas.get(i);
@@ -282,11 +281,11 @@ public final class TownChestScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.clickContent(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean scrollContent(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         int direction = -(int) Math.signum(verticalAmount);
         page = Math.max(0, Math.min(pages() - 1, page + direction));
         return true;

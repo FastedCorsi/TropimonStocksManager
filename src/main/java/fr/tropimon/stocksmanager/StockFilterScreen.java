@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 /** Filtres combinables et vues nommées, sans moteur de requête supplémentaire. */
-final class StockFilterScreen extends Screen {
+final class StockFilterScreen extends FittedScreen {
     private static final Identifier PC = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier FILTER = Identifier.of("tropimodclient", "guis/commons/buttons/filters_button.png");
     private static final Identifier SORT = Identifier.of("tropimodclient", "guis/commons/buttons/sort_button.png");
@@ -28,11 +28,11 @@ final class StockFilterScreen extends Screen {
     private int left, top;
 
     StockFilterScreen(TownChestScreen parent) {
-        super(Text.translatable("screen.tropimon_stocks_manager.filters"));
+        super(Text.translatable("screen.tropimon_stocks_manager.filters"), 357, 213);
         this.parent = parent; sort = parent.sort(); lowOnly = parent.lowOnly(); staleOnly = parent.staleOnly();
     }
 
-    @Override protected void init() {
+    @Override protected void initContent() {
         left = (width - W) / 2; top = (height - H) / 2; refresh();
         sortButton = addDrawableChild(new StockPcButton(left + 33, top + 30, 101, 16,
                 sortText(), button -> cycleSort(), false));
@@ -69,15 +69,15 @@ final class StockFilterScreen extends Screen {
         name.setText(""); refresh();
     }
 
-    @Override public void render(DrawContext context, int mx, int my, float delta) {
-        renderBackground(context, mx, my, delta); clicks.clear();
+    @Override public void renderContent(DrawContext context, int mx, int my, float delta) {
+        clicks.clear();
         context.drawTexture(PC, left, top, W, H, 0, 0, W, H, W, H);
         context.fill(left + 5, top + 24, left + 344, top + 189, 0xFFE7EDF3);
         context.drawTexture(FILTER, left + 10, top + 6, 14, 14, 0, 0, 16, 16, 16, 16);
         context.drawCenteredTextWithShadow(textRenderer, title, left + W / 2, top + 13, 0xFFFFFFFF);
         drawClose(context, mx, my);
         context.drawTexture(SORT, left + 14, top + 30, 16, 16, 0, 0, 16, 16, 16, 16);
-        super.render(context, mx, my, delta);
+        renderWidgets(context, mx, my, delta);
         context.drawText(textRenderer, Text.translatable("screen.tropimon_stocks_manager.views"),
                 left + 13, top + 52, 0xFF17242B, false);
         drawViews(context, mx, my);
@@ -116,12 +116,12 @@ final class StockFilterScreen extends Screen {
         clicks.add(new ClickArea(left + 331, top + 5, 16, 16, this::close));
     }
 
-    @Override public boolean mouseClicked(double x, double y, int button) {
+    @Override public boolean clickContent(double x, double y, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) for (int i = clicks.size() - 1; i >= 0; i--) {
             ClickArea area = clicks.get(i);
             if (ChestManagerScreen.inside(x, y, area.x, area.y, area.w, area.h)) { area.action.run(); return true; }
         }
-        return super.mouseClicked(x, y, button);
+        return super.clickContent(x, y, button);
     }
     @Override public void close() {
         parent.applyFilters(sort, lowOnly, staleOnly);

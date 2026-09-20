@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Liste persistante des seuils, y compris pour les objets actuellement à zéro. */
-final class WatchlistScreen extends Screen {
+final class WatchlistScreen extends FittedScreen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
@@ -28,12 +28,12 @@ final class WatchlistScreen extends Screen {
     private int page;
 
     WatchlistScreen(Screen parent) {
-        super(Text.translatable("screen.tropimon_stocks_manager.watchlist"));
+        super(Text.translatable("screen.tropimon_stocks_manager.watchlist"), 357, 213);
         this.parent = parent;
     }
 
     @Override
-    protected void init() {
+    protected void initContent() {
         left = (width - PANEL_W) / 2;
         top = (height - PANEL_H) / 2;
         refresh();
@@ -46,8 +46,7 @@ final class WatchlistScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+    public void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
         clickAreas.clear();
         context.drawTexture(PC_BASE, left, top, PANEL_W, PANEL_H,
                 0, 0, PANEL_W, PANEL_H, PANEL_W, PANEL_H);
@@ -68,7 +67,7 @@ final class WatchlistScreen extends Screen {
         centered(context, Text.translatable("screen.tropimon_stocks_manager.column.state"), left + 315, top + 48, 0xFF52636D);
         drawRows(context, mouseX, mouseY);
         drawFooter(context);
-        super.render(context, mouseX, mouseY, delta);
+        renderWidgets(context, mouseX, mouseY, delta);
     }
 
     private void drawRows(DrawContext context, int mouseX, int mouseY) {
@@ -138,7 +137,7 @@ final class WatchlistScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean clickContent(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             for (int i = clickAreas.size() - 1; i >= 0; i--) {
                 ClickArea area = clickAreas.get(i);
@@ -148,11 +147,11 @@ final class WatchlistScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.clickContent(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean scrollContent(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         page = Math.max(0, Math.min(pages() - 1, page - (int) Math.signum(verticalAmount)));
         return true;
     }

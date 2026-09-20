@@ -8,7 +8,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /** Fiche locale d'un coffre : nom, étiquettes, favori et oubli confirmé. */
-final class ChestEditScreen extends Screen {
+final class ChestEditScreen extends FittedScreen {
     private static final Identifier PC = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier STAR = Identifier.of("tropimodclient", "guis/commons/icons/star_icon.png");
     private static final Identifier TOWN = Identifier.of("tropimodclient", "guis/town/town_favicon.png");
@@ -23,11 +23,11 @@ final class ChestEditScreen extends Screen {
     private int left, top;
 
     ChestEditScreen(Screen parent, String chestId) {
-        super(Text.translatable("screen.tropimon_stocks_manager.chest.edit"));
+        super(Text.translatable("screen.tropimon_stocks_manager.chest.edit"), 357, 213);
         this.parent = parent; this.chestId = chestId;
     }
 
-    @Override protected void init() {
+    @Override protected void initContent() {
         left = (width - W) / 2; top = (height - H) / 2;
         TownChestIndex.ChestInfo chest = index.chest(chestId);
         if (chest == null) { close(); return; }
@@ -59,8 +59,7 @@ final class ChestEditScreen extends Screen {
         index.forgetChest(chestId); close();
     }
 
-    @Override public void render(DrawContext context, int mx, int my, float delta) {
-        renderBackground(context, mx, my, delta);
+    @Override public void renderContent(DrawContext context, int mx, int my, float delta) {
         context.drawTexture(PC, left, top, W, H, 0, 0, W, H, W, H);
         context.fill(left + 5, top + 24, left + 344, top + 189, 0xFFE7EDF3);
         TownChestIndex.ChestInfo chest = index.chest(chestId);
@@ -80,7 +79,7 @@ final class ChestEditScreen extends Screen {
             context.drawText(textRenderer, textRenderer.trimToWidth(safety, 310), left + 16, top + 169,
                     chest.removable() ? 0xFF268B4D : 0xFFC33B4A, false);
         }
-        super.render(context, mx, my, delta);
+        renderWidgets(context, mx, my, delta);
     }
     @Override public void close() { if (client != null) client.setScreen(parent); }
     @Override public boolean shouldPause() { return false; }

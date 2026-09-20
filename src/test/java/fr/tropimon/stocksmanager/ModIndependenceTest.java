@@ -38,7 +38,9 @@ final class ModIndependenceTest {
                     String name = matcher.group(1);
                     assertTrue(name.startsWith("java.") || name.startsWith("net.minecraft.")
                             || name.startsWith("net.fabricmc.") || name.startsWith("com.google.gson.")
-                            || name.startsWith("org.lwjgl.") || name.startsWith("org.slf4j."),
+                            || name.startsWith("org.lwjgl.") || name.startsWith("org.slf4j.")
+                            // JOML is provided by Minecraft for its GUI matrix and tooltip API.
+                            || name.startsWith("org.joml."),
                             "Unexpected binary dependency: " + name);
                 }
             }

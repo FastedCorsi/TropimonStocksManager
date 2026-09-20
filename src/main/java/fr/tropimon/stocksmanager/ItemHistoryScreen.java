@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Historique quotidien d'un objet, modifiable sans supprimer les coffres indexes. */
-final class ItemHistoryScreen extends Screen {
+final class ItemHistoryScreen extends FittedScreen {
     private static final Identifier PC_BASE = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier PREVIOUS_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_previous.png");
     private static final Identifier NEXT_ICON = Identifier.of("cobblemon", "textures/gui/pc/pc_arrow_next.png");
@@ -43,13 +43,13 @@ final class ItemHistoryScreen extends Screen {
     private String hoveredAction = "";
 
     ItemHistoryScreen(Screen parent, String itemId) {
-        super(Text.translatable("screen.tropimon_stocks_manager.history"));
+        super(Text.translatable("screen.tropimon_stocks_manager.history"), 357, 213);
         this.parent = parent;
         this.itemId = itemId;
     }
 
     @Override
-    protected void init() {
+    protected void initContent() {
         left = (width - PANEL_W) / 2;
         top = (height - PANEL_H) / 2;
         refresh();
@@ -100,8 +100,7 @@ final class ItemHistoryScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta);
+    public void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
         clickAreas.clear();
         hoveredAction = "";
         context.drawTexture(PC_BASE, left, top, PANEL_W, PANEL_H,
@@ -109,14 +108,14 @@ final class ItemHistoryScreen extends Screen {
         context.fill(left + 5, top + 24, left + 344, top + 189, 0xFFE7EDF3);
         context.fill(left + 5, top + 96, left + 344, top + 109, 0xFFD1DAE3);
         context.fill(left + 5, top + 24, left + 344, top + 26, 0xFF8B969E);
-        super.render(context, mouseX, mouseY, delta);
+        renderWidgets(context, mouseX, mouseY, delta);
         drawTitle(context, mouseX, mouseY);
         drawGraph(context);
         drawHeaders(context);
         drawRows(context, mouseX, mouseY);
         drawFooter(context);
         if (!hoveredAction.isBlank()) {
-            context.drawTooltip(textRenderer, Text.literal(hoveredAction), mouseX, mouseY);
+            queueTooltip(textRenderer, Text.literal(hoveredAction), mouseX, mouseY);
         }
     }
 
@@ -232,7 +231,7 @@ final class ItemHistoryScreen extends Screen {
     private int pages() { return Math.max(1, (entries.size() + PAGE_SIZE - 1) / PAGE_SIZE); }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean clickContent(double mouseX, double mouseY, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             for (int i = clickAreas.size() - 1; i >= 0; i--) {
                 ClickArea area = clickAreas.get(i);
@@ -242,11 +241,11 @@ final class ItemHistoryScreen extends Screen {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.clickContent(mouseX, mouseY, button);
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+    public boolean scrollContent(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         page = Math.max(0, Math.min(pages() - 1, page - (int) Math.signum(verticalAmount)));
         return true;
     }

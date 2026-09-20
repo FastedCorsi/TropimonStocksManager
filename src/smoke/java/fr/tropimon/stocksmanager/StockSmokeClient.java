@@ -15,6 +15,10 @@ public final class StockSmokeClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        if (Boolean.getBoolean("tropimon.gui.smoke")) {
+            new GuiScaleSmoke().onInitializeClient();
+            return;
+        }
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> started = true);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (!started || client.getOverlay() != null) return;

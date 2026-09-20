@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Organisation locale et nettoyage prudent des coffres mémorisés. */
-final class ChestManagerScreen extends Screen {
+final class ChestManagerScreen extends FittedScreen {
     private static final Identifier PC = Identifier.of("cobblemon", "textures/gui/pc/pc_base.png");
     private static final Identifier TOWN = Identifier.of("tropimodclient", "guis/town/town_favicon.png");
     private static final Identifier STAR = Identifier.of("tropimodclient", "guis/commons/icons/star_icon.png");
@@ -29,11 +29,11 @@ final class ChestManagerScreen extends Screen {
     private boolean confirmClean;
 
     ChestManagerScreen(Screen parent) {
-        super(Text.translatable("screen.tropimon_stocks_manager.chests"));
+        super(Text.translatable("screen.tropimon_stocks_manager.chests"), 357, 213);
         this.parent = parent;
     }
 
-    @Override protected void init() {
+    @Override protected void initContent() {
         left = (width - W) / 2; top = (height - H) / 2;
         refresh();
         cleanButton = addDrawableChild(new StockPcButton(left + 218, top + 28, 123, 16,
@@ -61,15 +61,15 @@ final class ChestManagerScreen extends Screen {
         refresh();
     }
 
-    @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        renderBackground(context, mouseX, mouseY, delta); clicks.clear();
+    @Override public void renderContent(DrawContext context, int mouseX, int mouseY, float delta) {
+        clicks.clear();
         context.drawTexture(PC, left, top, W, H, 0, 0, W, H, W, H);
         context.fill(left + 5, top + 24, left + 344, top + 189, 0xFFE7EDF3);
         context.fill(left + 5, top + 46, left + 344, top + 59, 0xFFD1DAE3);
         context.drawTexture(TOWN, left + 10, top + 6, 14, 14, 0, 0, 14, 14, 14, 14);
         context.drawCenteredTextWithShadow(textRenderer, title, left + W / 2, top + 13, 0xFFFFFFFF);
         drawClose(context, mouseX, mouseY);
-        super.render(context, mouseX, mouseY, delta);
+        renderWidgets(context, mouseX, mouseY, delta);
         context.drawText(textRenderer, Text.translatable("screen.tropimon_stocks_manager.chests.column.name"),
                 left + 39, top + 48, 0xFF17242B, false);
         context.drawText(textRenderer, Text.translatable("screen.tropimon_stocks_manager.chests.column.state"),
@@ -131,13 +131,13 @@ final class ChestManagerScreen extends Screen {
     static boolean inside(double mx, double my, int x, int y, int w, int h) {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
-    @Override public boolean mouseClicked(double x, double y, int button) {
+    @Override public boolean clickContent(double x, double y, int button) {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) for (int i = clicks.size() - 1; i >= 0; i--) {
             ClickArea area = clicks.get(i); if (inside(x, y, area.x, area.y, area.w, area.h)) {
                 area.action.run(); return true;
             }
         }
-        return super.mouseClicked(x, y, button);
+        return super.clickContent(x, y, button);
     }
     @Override public void close() { if (client != null) client.setScreen(parent); }
     @Override public boolean shouldPause() { return false; }
