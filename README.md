@@ -58,9 +58,12 @@ Les sauvegardes utilisent un écrivain asynchrone unique et des snapshots immuab
 Voir [le bilan d'optimisation et les tests isolés](OPTIMIZATION.md) pour les garanties, les commandes de validation et les limites.
 
 
-## Mises à jour automatiques
+## Mises à jour avec consentement
 
-Le mod vérifie sa propre Release GitHub au démarrage, au maximum une fois toutes les six heures. Lorsqu'une version plus récente est disponible, son JAR et son SHA-256 sont contrôlés, puis la mise à jour est installée après l'arrêt de Minecraft avec sauvegarde de l'ancien JAR. Le launcher peut rester ouvert.
+Aucun téléchargement de mise à jour sans accord. Le premier écran propose uniquement d'autoriser la consultation des métadonnées GitHub (au démarrage, au plus toutes les six heures). Une seconde confirmation montre la version et demande explicitement le téléchargement du JAR et de son SHA-256. L'ancien réglage `enabled: true` ne donne aucune autorisation.
 
-La vérification s'effectue en arrière-plan et n'ajoute aucun travail par tick. Elle peut être désactivée avec "enabled": false dans config/tropimon_stocks_manager-updater.json.
+Après accord et vérification, un installateur local utilise le Java de Minecraft, attend la fermeture du jeu, sauvegarde l'ancien JAR hors des mods chargés et remplace uniquement ce mod. Aucun autre mod Tropimon ni changement de launcher n'est requis. Le dossier `mods` classique et le stockage géré Tropimon reconnu sont pris en charge ; une disposition inconnue, un fichier modifié/verrouillé ou une incompatibilité bloque l'installation sans forcer. Le nom du JAR installé est conservé pour rester enregistré par le launcher ; la version réelle se lit dans les métadonnées Fabric.
 
+Pour modifier le choix en jeu : `/tropimonupdates tropimon_stocks_manager`. Refuser laisse le mod utilisable. Les anciennes versions dont l'updater est défectueux nécessitent un premier remplacement manuel, jeu fermé. L'accord donné pour ce mod ne s'applique pas aux autres mods. Les tests automatisés sont exécutés sous Windows ; les autres systèmes doivent encore être validés en situation réelle.
+
+Les versions à consentement utilisent un canal de releases distinct du lien GitHub « latest » historique : sélectionner la version par son tag. Cela évite de déclencher les anciens updaters sans accord.

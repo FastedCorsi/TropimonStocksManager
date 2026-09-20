@@ -117,7 +117,7 @@ val shareJar by tasks.registering(Sync::class) {
 val localJar by tasks.registering(Sync::class) {
     dependsOn(privacyArtifacts)
     from(tasks.remapJar.flatMap { it.archiveFile })
-    from("tools/install-local-deferred.ps1")
+    from("tools/install-local-deferred.ps1", "tools/InstallManagedLocalMod.ps1")
     into(layout.buildDirectory.dir("deliverables/local"))
     rename { name -> if (name.endsWith(".jar"))
         "TropimonStocksManager-${project.version}-LOCAL.jar" else name }
@@ -227,6 +227,8 @@ val prepareReleaseDelivery = tasks.register("prepareReleaseDelivery") {
         copyAndHash(localDirectory.resolve("TropimonStocksManager-${project.version}+1.21.1-LOCAL.jar"))
         file("tools/install-local-deferred.ps1")
             .copyTo(localDirectory.resolve("install-local-deferred.ps1"), overwrite = true)
+        file("tools/InstallManagedLocalMod.ps1")
+            .copyTo(localDirectory.resolve("InstallManagedLocalMod.ps1"), overwrite = true)
     }
 }
 
